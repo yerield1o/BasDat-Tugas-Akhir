@@ -19,6 +19,12 @@ public class CustomerDashboard extends JFrame {
     private JTextArea billTextArea;
     private JLabel cartTotalLabel;
 
+    private JTextField nameField;
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JTextField phoneField;
+    private JTextArea addressArea;
+
     private java.util.List<CartItem> floatingCart = new java.util.ArrayList<>();
 
     private JPanel purchasedContainerPanel;
@@ -40,7 +46,7 @@ public class CustomerDashboard extends JFrame {
         mainContentPanel.add(createStorePage(), "STORE");
         mainContentPanel.add(createCartPage(), "CART");
         mainContentPanel.add(createPurchasedPage(), "PURCHASED");
-        mainContentPanel.add(createPlaceholderPage("Account Settings"), "ACCOUNT");
+        mainContentPanel.add(createAccountPage(), "ACCOUNT");
 
         add(mainContentPanel, BorderLayout.CENTER);
         cardLayout.show(mainContentPanel, "STORE");
@@ -255,8 +261,15 @@ public class CustomerDashboard extends JFrame {
         buyButton.setFocusPainted(false);
 
         buyButton.addActionListener(e -> {
-            double rawPrice = Double.parseDouble(formattedPrice.replaceAll("[^\\d.]", ""));
-            showVariantPopUp(id, name, rawPrice);
+            try {
+                NumberFormat rpFormat = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
+                // This safely translates "Rp 199.000,00" back into the raw double 199000.0
+                double rawPrice = rpFormat.parse(formattedPrice).doubleValue();
+
+                showVariantPopUp(id, name, rawPrice);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         });
 
         // Put the button at the bottom (SOUTH)
@@ -878,6 +891,126 @@ public class CustomerDashboard extends JFrame {
     }
 
     // ==========================================
+    // THE ACCOUNT PAGE
+    // ==========================================
+    private JPanel createAccountPage() {
+        JPanel accountPage = new JPanel(new GridBagLayout());
+        accountPage.setBackground(new Color(245, 245, 245));
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(Color.WHITE);
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+                BorderFactory.createEmptyBorder(30, 40, 30, 40)
+        ));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Title
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        JLabel titleLabel = new JLabel("Account Settings", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        formPanel.add(titleLabel, gbc);
+
+        // Initialize Fields
+        nameField = new JTextField(20);
+        usernameField = new JTextField(20);
+        usernameField.setEditable(false); // Locked! Keeps session safe.
+        usernameField.setBackground(new Color(230, 230, 230));
+        passwordField = new JPasswordField(20);
+        phoneField = new JTextField(20);
+        addressArea = new JTextArea(4, 20);
+        addressArea.setLineWrap(true);
+        addressArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+
+        // Font styling for inputs
+        Font inputFont = new Font("Arial", Font.PLAIN, 14);
+        nameField.setFont(inputFont); usernameField.setFont(inputFont);
+        passwordField.setFont(inputFont); phoneField.setFont(inputFont);
+        addressArea.setFont(inputFont);
+
+        // Add Labels and Fields to Form
+        gbc.gridwidth = 1; gbc.gridy++;
+        gbc.gridx = 0; formPanel.add(new JLabel("Full Name:"), gbc);
+        gbc.gridx = 1; formPanel.add(nameField, gbc);
+
+        gbc.gridy++;
+        gbc.gridx = 0; formPanel.add(new JLabel("Username:"), gbc);
+        gbc.gridx = 1; formPanel.add(usernameField, gbc);
+
+        gbc.gridy++;
+        gbc.gridx = 0; formPanel.add(new JLabel("Password:"), gbc);
+        gbc.gridx = 1; formPanel.add(passwordField, gbc);
+
+        gbc.gridy++;
+        gbc.gridx = 0; formPanel.add(new JLabel("Phone Number:"), gbc);
+        gbc.gridx = 1; formPanel.add(phoneField, gbc);
+
+        gbc.gridy++;
+        gbc.gridx = 0; formPanel.add(new JLabel("Full Address:"), gbc);
+        gbc.gridx = 1; formPanel.add(new JScrollPane(addressArea), gbc);
+
+        // ==========================================
+        // FETCH CURRENT DATA FROM SQL
+        // ==========================================
+        String loadQuery = "SELECT nama_pelanggan, Username, Password, no_telepon, alamat_lengkap FROM Pelanggan WHERE Username = ?";
+        try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
+             PreparedStatement pstmt = conn.prepareStatement(loadQuery)) {
+            pstmt.setString(1, loggedInUser);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                nameField.setText(rs.getString("nama_pelanggan"));
+                usernameField.setText(rs.getString("Username"));
+                passwordField.setText(rs.getString("Password"));
+                phoneField.setText(rs.getString("no_telepon"));
+                addressArea.setText(rs.getString("alamat_lengkap"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // ==========================================
+        // SAVE BUTTON & UPDATE LOGIC
+        // ==========================================
+        gbc.gridy++;
+        gbc.gridx = 0; gbc.gridwidth = 2;
+        JButton saveBtn = new JButton("Save Changes");
+        saveBtn.setBackground(new Color(50, 200, 100));
+        saveBtn.setForeground(Color.WHITE);
+        saveBtn.setFont(new Font("Arial", Font.BOLD, 16));
+        saveBtn.setFocusPainted(false);
+
+        saveBtn.addActionListener(e -> {
+            String updateQuery = "UPDATE Pelanggan SET nama_pelanggan = ?, Password = ?, no_telepon = ?, alamat_lengkap = ? WHERE Username = ?";
+
+            try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
+                 PreparedStatement pstmt = conn.prepareStatement(updateQuery)) {
+
+                pstmt.setString(1, nameField.getText());
+                pstmt.setString(2, new String(passwordField.getPassword())); // Read the dots
+                pstmt.setString(3, phoneField.getText());
+                pstmt.setString(4, addressArea.getText());
+                pstmt.setString(5, loggedInUser); // The WHERE clause safety lock!
+
+                int rowsUpdated = pstmt.executeUpdate();
+                if (rowsUpdated > 0) {
+                    JOptionPane.showMessageDialog(accountPage, "Profile updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(accountPage, "Error updating profile.", "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        formPanel.add(saveBtn, gbc);
+        accountPage.add(formPanel);
+
+        return accountPage;
+    }
+
+    // ==========================================
     // HELPER CLASSES & METHODS
     // ==========================================
 
@@ -1044,7 +1177,7 @@ public class CustomerDashboard extends JFrame {
                 // A. Create the Order Header
                 try (PreparedStatement pstmtPesanan = conn.prepareStatement(insertPesananSql, Statement.RETURN_GENERATED_KEYS)) {
                     pstmtPesanan.setInt(1, customerId);
-                    pstmtPesanan.setString(2, "Pending (via " + courier.getName() + ")");
+                    pstmtPesanan.setString(2, "Pending");
                     pstmtPesanan.setDouble(3, totalHarga);
                     pstmtPesanan.executeUpdate();
 
