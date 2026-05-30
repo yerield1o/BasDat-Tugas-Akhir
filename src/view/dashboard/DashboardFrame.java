@@ -1,4 +1,5 @@
 package view.dashboard;
+import app.Main;
 
 import model.CartItem;
 import util.ImageLoader;
@@ -61,6 +62,25 @@ public class DashboardFrame extends JFrame {
         buttonPanel.setOpaque(false);
         String[] tabs = {"Store", "Cart", "Purchased", "Account"};
         String[] cardNames = {"STORE", "CART", "PURCHASED", "ACCOUNT"};
+
+        JButton logoutBtn = new JButton("Logout");
+        logoutBtn.setBackground(new Color(220, 50, 50)); // Red button for logout
+        logoutBtn.setForeground(Color.WHITE);
+        logoutBtn.setFocusPainted(false);
+        logoutBtn.setFont(new Font("Arial", Font.BOLD, 14));
+
+        logoutBtn.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to log out?",
+                    "Confirm Logout",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                new Main().setVisible(true);
+                this.dispose();
+            }
+        });
+        buttonPanel.add(logoutBtn);
 
         for (int i = 0; i < tabs.length; i++) {
             JButton tabButton = new JButton(tabs[i]);

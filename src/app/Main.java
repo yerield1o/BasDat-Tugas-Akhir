@@ -1,3 +1,5 @@
+package app;
+
 import view.auth.AuthFrame;
 import AdminApp.AdminApp;
 
