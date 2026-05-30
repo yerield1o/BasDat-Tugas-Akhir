@@ -352,22 +352,34 @@ public class CustomerDashboard extends JFrame {
             int selectedQty = (Integer) quantitySpinner.getValue(); // Read the spinner!
 
             if (selectedVariant != null) {
-                // Ensure they don't try to buy more than is in stock
-                if (selectedQty > selectedVariant.stock) {
-                    JOptionPane.showMessageDialog(dialog, "Only " + selectedVariant.stock + " items left in stock!", "Stock Error", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
+                // ==========================================
+                // FIX: Check cart memory BEFORE approving stock
+                // ==========================================
+                int amountAlreadyInCart = 0;
+                CartItem existingCartItem = null;
 
-                boolean alreadyInCart = false;
+                // See if it's already in the cart
                 for (CartItem item : floatingCart) {
                     if (item.getVariantId() == selectedVariant.getId()) {
-                        item.setQuantity(item.getQuantity() + selectedQty); // Add the specific amount
-                        alreadyInCart = true;
+                        amountAlreadyInCart = item.getQuantity();
+                        existingCartItem = item;
                         break;
                     }
                 }
 
-                if (!alreadyInCart) {
+                // Check combined total!
+                if ((selectedQty + amountAlreadyInCart) > selectedVariant.stock) {
+                    JOptionPane.showMessageDialog(dialog,
+                            "You can't add that many! You already have " + amountAlreadyInCart +
+                                    " in your cart, and there are only " + selectedVariant.stock + " left in stock.",
+                            "Stock Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                // If it passes the stock check, add it or update it!
+                if (existingCartItem != null) {
+                    existingCartItem.setQuantity(existingCartItem.getQuantity() + selectedQty);
+                } else {
                     String info = selectedVariant.getSize() + " | " + selectedVariant.getColor();
                     floatingCart.add(new CartItem(selectedVariant.getId(), productName, info, price, selectedQty));
                 }
