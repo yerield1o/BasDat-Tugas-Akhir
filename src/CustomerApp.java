@@ -16,7 +16,7 @@ public class CustomerApp extends JFrame {
 
     public CustomerApp() {
         // UPDATED: Generic Template Store Title
-        setTitle("Customer App - Template Store");
+        setTitle("Customer App - NIG Clothing");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
