@@ -42,8 +42,14 @@ public class ProductCard extends JPanel {
         add(imgLabel, BorderLayout.NORTH);
 
         // Info Produk
-        JPanel infoPanel = new JPanel(new GridLayout(2, 1));
+        JPanel infoPanel = new JPanel(new GridLayout(3, 1));
         infoPanel.setBackground(Color.WHITE);
+
+        String brandText = (product.getBrandName() != null) ? product.getBrandName().toUpperCase() : "NO BRAND";
+        JLabel brandLabel = new JLabel(brandText, SwingConstants.CENTER);
+        brandLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        brandLabel.setForeground(Color.GRAY);
+
         JLabel nameLabel = new JLabel(product.getName(), SwingConstants.CENTER);
         nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
@@ -52,6 +58,7 @@ public class ProductCard extends JPanel {
         priceLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         priceLabel.setForeground(new Color(0, 150, 0));
 
+        infoPanel.add(brandLabel);
         infoPanel.add(nameLabel);
         infoPanel.add(priceLabel);
         add(infoPanel, BorderLayout.CENTER);

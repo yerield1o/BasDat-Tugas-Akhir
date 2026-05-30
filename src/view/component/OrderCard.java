@@ -41,7 +41,7 @@ public class OrderCard extends JPanel {
         infoPanel.add(priceLabel);
         add(infoPanel, BorderLayout.CENTER);
 
-        JPanel btnPanel = new JPanel(new GridLayout(2, 1, 0, 10));
+        JPanel btnPanel = new JPanel(new GridLayout(0, 1, 0, 10));
         btnPanel.setOpaque(false);
 
         JButton trackBtn = new JButton("Check Delivery");

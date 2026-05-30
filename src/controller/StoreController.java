@@ -32,9 +32,12 @@ public class StoreController {
 
     public List<Product> getProducts(int categoryId) {
         List<Product> products = new ArrayList<>();
+        // WE ADDED A JOIN TO THE BRAND TABLE!
         String query = (categoryId == 0)
-                ? "SELECT id_produk, nama_produk, harga, gambar_produk FROM Produk"
-                : "SELECT id_produk, nama_produk, harga, gambar_produk FROM Produk WHERE id_kategori = ?";
+                ? "SELECT p.id_produk, p.nama_produk, p.harga, p.gambar_produk, b.nama_brand " +
+                "FROM Produk p LEFT JOIN Brand b ON p.id_brand = b.id_brand"
+                : "SELECT p.id_produk, p.nama_produk, p.harga, p.gambar_produk, b.nama_brand " +
+                "FROM Produk p LEFT JOIN Brand b ON p.id_brand = b.id_brand WHERE p.id_kategori = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query)) {
@@ -47,7 +50,8 @@ public class StoreController {
                         rs.getInt("id_produk"),
                         rs.getString("nama_produk"),
                         rs.getDouble("harga"),
-                        rs.getString("gambar_produk")
+                        rs.getString("gambar_produk"),
+                        rs.getString("nama_brand") // Grab the brand!
                 ));
             }
         } catch (Exception e) {
@@ -75,9 +79,12 @@ public class StoreController {
         return variants;
     }
 
+    // SPEC 3: TEXT-BASED SEARCH QUERY (Now with Brand!)
     public List<Product> searchProductsByName(String keyword) {
         List<Product> products = new ArrayList<>();
-        String query = "SELECT id_produk, nama_produk, harga, gambar_produk FROM Produk WHERE nama_produk LIKE ?";
+        String query = "SELECT p.id_produk, p.nama_produk, p.harga, p.gambar_produk, b.nama_brand " +
+                "FROM Produk p LEFT JOIN Brand b ON p.id_brand = b.id_brand " +
+                "WHERE p.nama_produk LIKE ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query)) {
@@ -90,7 +97,8 @@ public class StoreController {
                         rs.getInt("id_produk"),
                         rs.getString("nama_produk"),
                         rs.getDouble("harga"),
-                        rs.getString("gambar_produk")
+                        rs.getString("gambar_produk"),
+                        rs.getString("nama_brand")
                 ));
             }
         } catch (Exception e) {

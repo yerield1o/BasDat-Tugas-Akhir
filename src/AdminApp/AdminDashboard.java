@@ -437,6 +437,12 @@ public class AdminDashboard extends JFrame {
                 manageBtn.setFocusPainted(false);
                 manageBtn.addActionListener(e -> showProductStockPopUp(id, name));
 
+                JButton changeBrandBtn = new JButton("Change Brand");
+                changeBrandBtn.setBackground(new Color(150, 50, 250));
+                changeBrandBtn.setForeground(Color.WHITE);
+                changeBrandBtn.setFocusPainted(false);
+                changeBrandBtn.addActionListener(e -> showChangeBrandPopUp(id, name));
+
                 JButton deleteBtn = new JButton("Delete");
                 deleteBtn.setBackground(new Color(220, 50, 50));
                 deleteBtn.setForeground(Color.WHITE);
@@ -451,6 +457,7 @@ public class AdminDashboard extends JFrame {
                 JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
                 actionPanel.setOpaque(false);
                 actionPanel.add(manageBtn);
+                actionPanel.add(changeBrandBtn);
                 actionPanel.add(deleteBtn);
                 card.add(actionPanel, BorderLayout.EAST);
 
@@ -776,39 +783,129 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-    // ==========================================
-    // SPEC 2: ADMIN CRUD LOGIC (CREATE & DELETE)
-    // ==========================================
+    // Helper method to fetch Brands from the database dynamically
+    private JComboBox<model.Brand> createBrandDropdown() {
+        JComboBox<model.Brand> dropdown = new JComboBox<>();
+        try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT id_brand, nama_brand FROM Brand")) {
+            while (rs.next()) {
+                dropdown.addItem(new model.Brand(rs.getInt("id_brand"), rs.getString("nama_brand")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return dropdown;
+    }
+
+    // UPDATED: Create Product (Now includes Brand!)
     private void showAddProductPopUp() {
-        // A simple pop up to create a new Product
         JTextField nameField = new JTextField();
         JTextField priceField = new JTextField();
+
         JComboBox<Category> catDropdown = new JComboBox<>();
         for (int i = 1; i < adminCategoryDropdown.getItemCount(); i++) {
             catDropdown.addItem(adminCategoryDropdown.getItemAt(i));
         }
 
+        // NEW: Brand Dropdown!
+        JComboBox<model.Brand> brandDropdown = createBrandDropdown();
+
+        JTextField sizeField = new JTextField("L");
+        JTextField colorField = new JTextField("Black");
+        JSpinner stockSpinner = new JSpinner(new SpinnerNumberModel(10, 0, 9999, 1));
+
         Object[] message = {
+                "--- PRODUCT INFO ---", "",
                 "Product Name:", nameField,
                 "Price (Rp):", priceField,
-                "Category:", catDropdown
+                "Category:", catDropdown,
+                "Brand:", brandDropdown, // Added to the UI!
+                "", "",
+                "--- FIRST VARIANT INFO ---", "",
+                "Size (e.g., S, M, L, XL):", sizeField,
+                "Color:", colorField,
+                "Initial Stock:", stockSpinner
         };
 
         int option = JOptionPane.showConfirmDialog(this, message, "Create New Product", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
-            try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
-                 PreparedStatement pstmt = conn.prepareStatement(
-                         "INSERT INTO Produk (nama_produk, harga, id_kategori, id_brand) VALUES (?, ?, ?, 1)")) {
 
-                pstmt.setString(1, nameField.getText());
-                pstmt.setDouble(2, Double.parseDouble(priceField.getText()));
-                pstmt.setInt(3, ((Category) catDropdown.getSelectedItem()).getId());
-                pstmt.executeUpdate();
+            // NOTICE: id_brand is now a ? instead of a hardcoded 1
+            String insertProduct = "INSERT INTO Produk (nama_produk, harga, id_kategori, id_brand) VALUES (?, ?, ?, ?)";
+            String insertVariant = "INSERT INTO Produk_Varian (id_produk, ukuran, warna, stok) VALUES (?, ?, ?, ?)";
 
-                JOptionPane.showMessageDialog(this, "Product successfully created!");
-                loadAdminProducts(0); // Refresh the list
+            try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass)) {
+                conn.setAutoCommit(false);
+
+                try (PreparedStatement pstmtProd = conn.prepareStatement(insertProduct, Statement.RETURN_GENERATED_KEYS)) {
+                    pstmtProd.setString(1, nameField.getText());
+                    pstmtProd.setDouble(2, Double.parseDouble(priceField.getText()));
+                    pstmtProd.setInt(3, ((Category) catDropdown.getSelectedItem()).getId());
+                    // Set the brand ID based on what the Admin selected!
+                    pstmtProd.setInt(4, ((model.Brand) brandDropdown.getSelectedItem()).getId());
+                    pstmtProd.executeUpdate();
+
+                    ResultSet rs = pstmtProd.getGeneratedKeys();
+                    if (rs.next()) {
+                        int newProductId = rs.getInt(1);
+                        try (PreparedStatement pstmtVar = conn.prepareStatement(insertVariant)) {
+                            pstmtVar.setInt(1, newProductId);
+                            pstmtVar.setString(2, sizeField.getText());
+                            pstmtVar.setString(3, colorField.getText());
+                            pstmtVar.setInt(4, (Integer) stockSpinner.getValue());
+                            pstmtVar.executeUpdate();
+                        }
+                    }
+                    conn.commit();
+                    JOptionPane.showMessageDialog(this, "Product successfully created!");
+                    loadAdminProducts(0);
+                } catch (Exception ex) {
+                    conn.rollback();
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Error creating product.", "Error", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    conn.setAutoCommit(true);
+                }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Error creating product. Check your inputs.");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // NEW METHOD: Update an existing product's brand!
+    private void showChangeBrandPopUp(int productId, String productName) {
+        JComboBox<model.Brand> brandDropdown = createBrandDropdown();
+
+        Object[] message = {
+                "Select a new Brand for:",
+                "<html><b>" + productName + "</b></html>",
+                "",
+                brandDropdown
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Change Brand", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (option == JOptionPane.OK_OPTION) {
+            model.Brand selectedBrand = (model.Brand) brandDropdown.getSelectedItem();
+
+            if (selectedBrand != null) {
+                String query = "UPDATE Produk SET id_brand = ? WHERE id_produk = ?";
+                try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
+                     PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+                    pstmt.setInt(1, selectedBrand.getId());
+                    pstmt.setInt(2, productId);
+                    pstmt.executeUpdate();
+
+                    JOptionPane.showMessageDialog(this, "Brand successfully updated to " + selectedBrand.getName() + "!");
+                    // Refresh the store so the customer sees the change instantly
+                    loadAdminProducts(0);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Database error updating brand.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         }
     }
