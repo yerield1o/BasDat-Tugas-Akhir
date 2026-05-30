@@ -3,6 +3,7 @@ package controller;
 import model.Category;
 import model.Product;
 import model.Variant;
+import model.Brand;
 import util.DatabaseConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,19 +31,42 @@ public class StoreController {
         return categories;
     }
 
-    public List<Product> getProducts(int categoryId) {
-        List<Product> products = new ArrayList<>();
-        String query = (categoryId == 0)
-                ? "SELECT p.id_produk, p.nama_produk, p.harga, p.gambar_produk, b.nama_brand " +
-                "FROM Produk p LEFT JOIN Brand b ON p.id_brand = b.id_brand"
-                : "SELECT p.id_produk, p.nama_produk, p.harga, p.gambar_produk, b.nama_brand " +
-                "FROM Produk p LEFT JOIN Brand b ON p.id_brand = b.id_brand WHERE p.id_kategori = ?";
+    public List<Brand> getBrands() {
+        List<Brand> brands = new ArrayList<>();
+        brands.add(new Brand(0, "All Brands"));
+        String query = "SELECT id_brand, nama_brand FROM Brand";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                brands.add(new Brand(rs.getInt("id_brand"), rs.getString("nama_brand")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return brands;
+    }
 
-            if (categoryId != 0) pstmt.setInt(1, categoryId);
-            ResultSet rs = pstmt.executeQuery();
+    public List<Product> getProducts(int categoryId, int brandId) {
+        List<Product> products = new ArrayList<>();
+
+        StringBuilder queryBuilder = new StringBuilder(
+                "SELECT p.id_produk, p.nama_produk, p.harga, p.gambar_produk, b.nama_brand " +
+                        "FROM Produk p LEFT JOIN Brand b ON p.id_brand = b.id_brand WHERE 1=1"
+        );
+
+        if (categoryId != 0) {
+            queryBuilder.append(" AND p.id_kategori = ").append(categoryId);
+        }
+
+        if (brandId != 0) {
+            queryBuilder.append(" AND p.id_brand = ").append(brandId);
+        }
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(queryBuilder.toString())) {
 
             while (rs.next()) {
                 products.add(new Product(

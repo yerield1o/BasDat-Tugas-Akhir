@@ -38,6 +38,7 @@ public class AdminDashboard extends JFrame {
 
         cardLayout.show(mainContentPanel, "ORDERS");
         refreshOrdersData();
+        refreshAnalyticsData("All Time");
     }
 
     private JPanel createAdminNavBar() {
@@ -549,7 +550,8 @@ public class AdminDashboard extends JFrame {
         topProductsPanel.add(new JScrollPane(topProductsTable), BorderLayout.CENTER);
 
         timeFilterDropdown.addActionListener(e -> {
-            refreshTopProductsData((String) timeFilterDropdown.getSelectedItem());
+            String selectedTime = (String) timeFilterDropdown.getSelectedItem();
+            refreshAnalyticsData(selectedTime);
         });
 
         JPanel pairedPanel = new JPanel(new BorderLayout());
@@ -585,46 +587,28 @@ public class AdminDashboard extends JFrame {
         return page;
     }
 
-    private void refreshAnalyticsData() {
+    private void refreshAnalyticsData(String timeFilter) {
         pairedItemsModel.setRowCount(0);
         brandModel.setRowCount(0);
 
-        refreshTopProductsData("All Time");
+        refreshTopProductsData(timeFilter);
+
+        int filterDays = 36500;
+        if (timeFilter.equals("Last 24 Hours")) filterDays = 1;
+        else if (timeFilter.equals("Last 7 Days")) filterDays = 7;
+        else if (timeFilter.equals("Last 30 Days")) filterDays = 30;
 
         try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass)) {
-
-            JPanel topProductsPanel = new JPanel(new BorderLayout());
-            topProductsPanel.setBackground(Color.WHITE);
-            topProductsPanel.setBorder(BorderFactory.createTitledBorder(
-                    BorderFactory.createLineBorder(Color.GRAY), "Highest Selling Products"));
-
-            JPanel topProductsHeader = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            topProductsHeader.setOpaque(false);
-            topProductsHeader.add(new JLabel("Filter Time: "));
-
-            String[] timeOptions = {"All Time", "Last 24 Hours", "Last 7 Days", "Last 30 Days"};
-            JComboBox<String> timeFilterDropdown = new JComboBox<>(timeOptions);
-            topProductsHeader.add(timeFilterDropdown);
-            topProductsPanel.add(topProductsHeader, BorderLayout.NORTH);
-
-            String[] col1 = {"Product Name", "Total Units Sold"};
-            topProductsModel = new javax.swing.table.DefaultTableModel(col1, 0);
-            JTable topProductsTable = new JTable(topProductsModel);
-            topProductsTable.setRowHeight(25);
-            topProductsPanel.add(new JScrollPane(topProductsTable), BorderLayout.CENTER);
-
-            timeFilterDropdown.addActionListener(e -> {
-                refreshTopProductsData((String) timeFilterDropdown.getSelectedItem());
-            });
-
             String pairQuery =
                     "SELECT TOP 10 p1.nama_produk AS item1, p2.nama_produk AS item2, COUNT(*) AS times_paired " +
                             "FROM Produk_Dibeli pd1 " +
                             "JOIN Produk_Varian pv1 ON pd1.id_varian = pv1.id_varian " +
                             "JOIN Produk p1 ON pv1.id_produk = p1.id_produk " +
-                            "JOIN Produk_Dibeli pd2 ON pd1.id_pesanan = pd2.id_pesanan AND pv1.id_produk < pv2.id_produk " +
+                            "JOIN Produk_Dibeli pd2 ON pd1.id_pesanan = pd2.id_pesanan AND pd1.id_varian < pd2.id_varian " +
                             "JOIN Produk_Varian pv2 ON pd2.id_varian = pv2.id_varian " +
                             "JOIN Produk p2 ON pv2.id_produk = p2.id_produk " +
+                            "JOIN Pesanan pes ON pd1.id_pesanan = pes.id_pesanan " +
+                            "WHERE pes.tanggal_pesanan >= DATEADD(day, -" + filterDays + ", GETDATE()) " +
                             "GROUP BY p1.nama_produk, p2.nama_produk " +
                             "ORDER BY times_paired DESC";
 
@@ -637,23 +621,13 @@ public class AdminDashboard extends JFrame {
                             rs2.getInt("times_paired") + " orders"
                     });
                 }
+            }
 
-                String brandQuery =
-                        "WITH BrandSales AS (" +
-                                "    SELECT b.nama_brand, p.nama_produk, SUM(pd.kuantitas) as total_sold, " +
-                                "           ROW_NUMBER() OVER(PARTITION BY b.id_brand ORDER BY SUM(pd.kuantitas) DESC) as rank " +
-                                "    FROM Produk_Dibeli pd " +
-                                "    JOIN Produk_Varian pv ON pd.id_varian = pv.id_varian " +
-                                "    JOIN Produk p ON pv.id_produk = p.id_produk " +
-                                "    JOIN Brand b ON p.id_brand = b.id_brand " +
-                                "    GROUP BY b.id_brand, b.nama_brand, p.id_produk, p.nama_produk" +
-                                ") " +
-                                "SELECT nama_brand, nama_produk, total_sold " +
-                                "FROM BrandSales " +
-                                "WHERE rank = 1";
 
-                try (Statement stmt3 = conn.createStatement();
-                     ResultSet rs3 = stmt3.executeQuery(brandQuery)) {
+            try (CallableStatement cstmt = conn.prepareCall("{call sp_Top5Brands(?)}")) {
+                cstmt.setInt(1, filterDays);
+
+                try (ResultSet rs3 = cstmt.executeQuery()) {
                     while (rs3.next()) {
                         brandModel.addRow(new Object[]{
                                 rs3.getString("nama_brand"),
@@ -666,7 +640,7 @@ public class AdminDashboard extends JFrame {
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Analytics Error: Make sure your database has enough sample orders!");
+            System.out.println("Analytics Error: Failed to fetch dynamic data.");
         }
     }
 
@@ -872,4 +846,5 @@ public class AdminDashboard extends JFrame {
             return size + " | " + color + " (Current Stock: " + stock + ")";
         }
     }
+
 }

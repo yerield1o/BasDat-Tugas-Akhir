@@ -3,6 +3,7 @@ package view.dashboard;
 import controller.StoreController;
 import model.Category;
 import model.Product;
+import model.Brand;
 import view.component.ProductCard;
 import javax.swing.*;
 import java.awt.*;
@@ -15,6 +16,7 @@ public class StorePanel extends JPanel {
     private JLabel categoryNameLabel;
     private JLabel categoryDescLabel;
     private JComboBox<Category> categoryDropdown;
+    private JComboBox<Brand> brandDropdown;
 
     public StorePanel(DashboardFrame parentFrame) {
         this.parentFrame = parentFrame;
@@ -52,7 +54,8 @@ public class StorePanel extends JPanel {
                 loadSearchedProducts(keyword);
             } else {
                 categoryDropdown.setSelectedIndex(0);
-                loadProducts(0);
+                brandDropdown.setSelectedIndex(0);
+                triggerProductLoad();
             }
         });
 
@@ -60,21 +63,21 @@ public class StorePanel extends JPanel {
         filterPanel.add(searchBtn);
         filterPanel.add(Box.createRigidArea(new Dimension(20, 0)));
 
-        filterPanel.add(new JLabel("Sort by Category: "));
-
+        filterPanel.add(new JLabel("Category: "));
         categoryDropdown = new JComboBox<>();
         List<Category> categories = storeController.getCategories();
         for (Category c : categories) categoryDropdown.addItem(c);
 
-        categoryDropdown.addActionListener(e -> {
-            Category selectedCategory = (Category) categoryDropdown.getSelectedItem();
-            if (selectedCategory != null) {
-                categoryNameLabel.setText(selectedCategory.getName());
-                categoryDescLabel.setText(selectedCategory.getDescription());
-                loadProducts(selectedCategory.getId());
-            }
-        });
+        filterPanel.add(new JLabel(" Brand: "));
+        brandDropdown = new JComboBox<>();
+        List<Brand> brands = storeController.getBrands();
+        for (Brand b : brands) brandDropdown.addItem(b);
+
+        categoryDropdown.addActionListener(e -> triggerProductLoad());
+        brandDropdown.addActionListener(e -> triggerProductLoad());
+
         filterPanel.add(categoryDropdown);
+        filterPanel.add(brandDropdown);
         headerPanel.add(filterPanel, BorderLayout.EAST);
         add(headerPanel, BorderLayout.NORTH);
 
@@ -87,12 +90,27 @@ public class StorePanel extends JPanel {
         scrollPane.setBorder(null);
         add(scrollPane, BorderLayout.CENTER);
 
-        loadProducts(0);
+        triggerProductLoad();
     }
 
-    private void loadProducts(int categoryId) {
+    private void triggerProductLoad() {
+        Category selectedCategory = (Category) categoryDropdown.getSelectedItem();
+        Brand selectedBrand = (Brand) brandDropdown.getSelectedItem();
+
+        int catId = (selectedCategory != null) ? selectedCategory.getId() : 0;
+        int brandId = (selectedBrand != null) ? selectedBrand.getId() : 0;
+
+        if (selectedCategory != null) {
+            categoryNameLabel.setText(selectedCategory.getName());
+            categoryDescLabel.setText(selectedCategory.getDescription());
+        }
+
+        loadProducts(catId, brandId);
+    }
+
+    private void loadProducts(int categoryId, int brandId) {
         productGridPanel.removeAll();
-        List<Product> products = storeController.getProducts(categoryId);
+        List<Product> products = storeController.getProducts(categoryId, brandId);
 
         for (Product p : products) {
             productGridPanel.add(new ProductCard(p, parentFrame, storeController));
@@ -101,11 +119,11 @@ public class StorePanel extends JPanel {
         productGridPanel.revalidate();
         productGridPanel.repaint();
     }
+
     public void refreshStoreData() {
-        Category selectedCategory = (Category) categoryDropdown.getSelectedItem();
-        int categoryId = (selectedCategory != null) ? selectedCategory.getId() : 0;
-        loadProducts(categoryId);
+        triggerProductLoad();
     }
+
     private void loadSearchedProducts(String keyword) {
         productGridPanel.removeAll();
 
