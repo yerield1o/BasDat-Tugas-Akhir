@@ -1,0 +1,77 @@
+package controller;
+
+import model.Category;
+import model.Product;
+import model.Variant;
+import util.DatabaseConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+public class StoreController {
+
+    public List<Category> getCategories() {
+        List<Category> categories = new ArrayList<>();
+        categories.add(new Category(0, "All Categories", "Showing all available products in the store."));
+        String query = "SELECT id_kategori, nama_kategori, deskripsi FROM Kategori";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                categories.add(new Category(rs.getInt("id_kategori"), rs.getString("nama_kategori"), rs.getString("deskripsi")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return categories;
+    }
+
+    public List<Product> getProducts(int categoryId) {
+        List<Product> products = new ArrayList<>();
+        String query = (categoryId == 0)
+                ? "SELECT id_produk, nama_produk, harga, gambar_produk FROM Produk"
+                : "SELECT id_produk, nama_produk, harga, gambar_produk FROM Produk WHERE id_kategori = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            if (categoryId != 0) pstmt.setInt(1, categoryId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                products.add(new Product(
+                        rs.getInt("id_produk"),
+                        rs.getString("nama_produk"),
+                        rs.getDouble("harga"),
+                        rs.getString("gambar_produk")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return products;
+    }
+
+    public List<Variant> getProductVariants(int productId) {
+        List<Variant> variants = new ArrayList<>();
+        String query = "SELECT id_varian, ukuran, warna, stok FROM Produk_Varian WHERE id_produk = ? AND stok > 0";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setInt(1, productId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                variants.add(new Variant(
+                        rs.getInt("id_varian"), rs.getString("ukuran"), rs.getString("warna"), rs.getInt("stok")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return variants;
+    }
+}
