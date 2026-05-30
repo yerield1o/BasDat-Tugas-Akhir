@@ -290,24 +290,26 @@ public class CustomerApp extends JFrame {
     }
 
     // ==========================================
-    // DATABASE REGISTRATION LOGIC
+    // FIXED: DATABASE REGISTRATION LOGIC
     // ==========================================
     private boolean registerNewUser(String username, String rawPassword) {
         if (username.isEmpty() || rawPassword.isEmpty()) return false;
 
-        // UPDATED: Generic Database URL placeholder
         String dbURL = "jdbc:sqlserver://localhost:1433;databaseName=NIG_Clothing;encrypt=true;trustServerCertificate=true;";
         String dbUser = "sa";
         String dbPass = "password";
 
-        // String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
-        String sqlQuery = "INSERT INTO AkunPelanggan (username, password) VALUES (?, ?)";
+        // FIX 1: Insert into Pelanggan.
+        // FIX 2: Add placeholder values for the NOT NULL columns!
+        String sqlQuery = "INSERT INTO Pelanggan (Username, Password, nama_pelanggan, alamat_lengkap) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
              PreparedStatement pstmt = conn.prepareStatement(sqlQuery)) {
 
             pstmt.setString(1, username);
-            pstmt.setString(2, rawPassword); // Swap to hashedPassword when you add the library
+            pstmt.setString(2, rawPassword);
+            pstmt.setString(3, "New Customer"); // Placeholder Name
+            pstmt.setString(4, "Please update your address in Account Settings"); // Placeholder Address
 
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
