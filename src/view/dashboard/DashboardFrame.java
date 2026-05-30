@@ -42,8 +42,10 @@ public class DashboardFrame extends JFrame {
 
     public String getLoggedInUser() { return loggedInUser; }
     public List<CartItem> getFloatingCart() { return floatingCart; }
-    public void showStore() { cardLayout.show(mainContentPanel, "STORE"); }
-
+    public void showStore() {
+        storePanel.refreshStoreData();
+        cardLayout.show(mainContentPanel, "STORE");
+    }
     private JPanel createNavBar() {
         JPanel navBar = new JPanel(new BorderLayout());
         navBar.setBackground(new Color(30, 30, 30));

@@ -78,28 +78,79 @@ public class ProductCard extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        JLabel titleLabel = new JLabel("Choose Size and Color:");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        mainPanel.add(titleLabel, gbc);
+        mainPanel.add(new JLabel("Choose Size and Color:"), gbc);
 
         gbc.gridy = 1;
-        JComboBox<Variant> variantDropdown = new JComboBox<>();
-        List<Variant> variants = storeController.getProductVariants(product.getId());
 
-        if (variants.isEmpty()) {
-            JOptionPane.showMessageDialog(parentFrame, "Sorry, this product is currently out of stock!");
+        // Membuat class internal khusus untuk memanipulasi teks tampilan di Dropdown UI
+        class VariantOption {
+            Variant variant;
+            int availableStock;
+
+            VariantOption(Variant variant, int availableStock) {
+                this.variant = variant;
+                this.availableStock = availableStock;
+            }
+
+            @Override
+            public String toString() {
+                return variant.getSize() + " | " + variant.getColor() + " (Available: " + availableStock + ")";
+            }
+        }
+
+        JComboBox<VariantOption> variantDropdown = new JComboBox<>();
+        List<Variant> variants = storeController.getProductVariants(product.getId());
+        List<CartItem> cart = parentFrame.getFloatingCart();
+
+        boolean hasStock = false;
+
+        // Kalkulasi stok realtime (Database - Keranjang)
+        for (Variant v : variants) {
+            int amountAlreadyInCart = 0;
+            for (CartItem item : cart) {
+                if (item.getVariantId() == v.getId()) {
+                    amountAlreadyInCart = item.getQuantity();
+                    break;
+                }
+            }
+
+            int available = v.getStock() - amountAlreadyInCart;
+            // Hanya tampilkan opsi di dropdown jika stok yang tersedia masih lebih dari 0
+            if (available > 0) {
+                variantDropdown.addItem(new VariantOption(v, available));
+                hasStock = true;
+            }
+        }
+
+        // Blokir jika semua varian habis atau sudah masuk keranjang semua
+        if (!hasStock) {
+            JOptionPane.showMessageDialog(parentFrame, "Sorry, all options for this product are currently out of stock or already maximized in your cart!");
             return;
         }
-        for (Variant v : variants) variantDropdown.addItem(v);
+
         mainPanel.add(variantDropdown, gbc);
 
         gbc.gridy = 2;
         JPanel qtyPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         qtyPanel.setOpaque(false);
         qtyPanel.add(new JLabel("Quantity:  "));
-        JSpinner quantitySpinner = new JSpinner(new SpinnerNumberModel(1, 1, 99, 1));
+
+        // Ambil nilai maksimal stok dari opsi pertama yang terpilih untuk mengatur batas atas Spinner
+        VariantOption firstOption = (VariantOption) variantDropdown.getSelectedItem();
+        JSpinner quantitySpinner = new JSpinner(new SpinnerNumberModel(1, 1, firstOption.availableStock, 1));
         qtyPanel.add(quantitySpinner);
         mainPanel.add(qtyPanel, gbc);
+
+        // Listener agar nilai maksimal pada Spinner otomatis berubah saat warna/ukuran diganti
+        variantDropdown.addActionListener(e -> {
+            VariantOption selected = (VariantOption) variantDropdown.getSelectedItem();
+            if (selected != null) {
+                int currentVal = (Integer) quantitySpinner.getValue();
+                int max = selected.availableStock;
+                int newVal = Math.min(currentVal, max); // Cegah nilai melebihi batas maksimal yang baru
+                quantitySpinner.setModel(new SpinnerNumberModel(newVal, 1, max, 1));
+            }
+        });
 
         gbc.gridy = 3;
         JButton confirmButton = new JButton("Confirm Add to Cart");
@@ -107,11 +158,11 @@ public class ProductCard extends JPanel {
         confirmButton.setForeground(Color.WHITE);
 
         confirmButton.addActionListener(e -> {
-            Variant selectedVariant = (Variant) variantDropdown.getSelectedItem();
+            VariantOption selectedOption = (VariantOption) variantDropdown.getSelectedItem();
             int selectedQty = (Integer) quantitySpinner.getValue();
 
-            if (selectedVariant != null) {
-                List<CartItem> cart = parentFrame.getFloatingCart();
+            if (selectedOption != null) {
+                Variant selectedVariant = selectedOption.variant;
                 int amountAlreadyInCart = 0;
                 CartItem existingCartItem = null;
 
@@ -123,8 +174,9 @@ public class ProductCard extends JPanel {
                     }
                 }
 
+                // Validasi keamanan akhir sebelum memasukkan data ke keranjang
                 if ((selectedQty + amountAlreadyInCart) > selectedVariant.getStock()) {
-                    JOptionPane.showMessageDialog(dialog, "Stock limited. Only " + selectedVariant.getStock() + " left.", "Stock Error", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(dialog, "Stock limited. Only " + selectedOption.availableStock + " more left.", "Stock Error", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
@@ -134,7 +186,6 @@ public class ProductCard extends JPanel {
                     String info = selectedVariant.getSize() + " | " + selectedVariant.getColor();
                     cart.add(new CartItem(selectedVariant.getId(), product.getName(), info, product.getPrice(), selectedQty, selectedVariant.getStock()));
                 }
-
                 JOptionPane.showMessageDialog(dialog, "Added to cart!");
                 dialog.dispose();
             }

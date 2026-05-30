@@ -81,4 +81,9 @@ public class StorePanel extends JPanel {
         productGridPanel.revalidate();
         productGridPanel.repaint();
     }
+    public void refreshStoreData() {
+        Category selectedCategory = (Category) categoryDropdown.getSelectedItem();
+        int categoryId = (selectedCategory != null) ? selectedCategory.getId() : 0;
+        loadProducts(categoryId);
+    }
 }
