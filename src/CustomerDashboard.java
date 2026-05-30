@@ -381,7 +381,7 @@ public class CustomerDashboard extends JFrame {
                     existingCartItem.setQuantity(existingCartItem.getQuantity() + selectedQty);
                 } else {
                     String info = selectedVariant.getSize() + " | " + selectedVariant.getColor();
-                    floatingCart.add(new CartItem(selectedVariant.getId(), productName, info, price, selectedQty));
+                    floatingCart.add(new CartItem(selectedVariant.getId(), productName, info, price, selectedQty, selectedVariant.stock));
                 }
 
                 JOptionPane.showMessageDialog(dialog, "Added " + selectedQty + "x " + productName + " to cart!");
@@ -576,8 +576,17 @@ public class CustomerDashboard extends JFrame {
 
         // Logic to increase quantity
         plusBtn.addActionListener(e -> {
-            floatingCart.get(listIndex).setQuantity(qty + 1);
-            refreshCartData(); // Redraw instantly!
+            CartItem currentItem = floatingCart.get(listIndex);
+
+            if (qty < currentItem.getMaxStock()) {
+                currentItem.setQuantity(qty + 1);
+                refreshCartData(); // Redraw instantly!
+            } else {
+                // Stop them and show a warning!
+                JOptionPane.showMessageDialog(card,
+                        "You cannot add more. Only " + currentItem.getMaxStock() + " left in stock!",
+                        "Stock Limit Reached", JOptionPane.WARNING_MESSAGE);
+            }
         });
 
         qtyPanel.add(minusBtn);
@@ -1270,19 +1279,24 @@ public class CustomerDashboard extends JFrame {
     // ==========================================
     // NEW: FLOATING CART ITEM OBJECT
     // ==========================================
+    // ==========================================
+    // UPDATED: FLOATING CART ITEM OBJECT
+    // ==========================================
     class CartItem {
         private int variantId;
         private String productName;
         private String variantInfo;
         private double price;
         private int quantity;
+        private int maxStock; // NEW: Remembers the stock limit!
 
-        public CartItem(int variantId, String productName, String variantInfo, double price, int quantity) {
+        public CartItem(int variantId, String productName, String variantInfo, double price, int quantity, int maxStock) {
             this.variantId = variantId;
             this.productName = productName;
             this.variantInfo = variantInfo;
             this.price = price;
             this.quantity = quantity;
+            this.maxStock = maxStock;
         }
 
         public int getVariantId() { return variantId; }
@@ -1290,6 +1304,7 @@ public class CustomerDashboard extends JFrame {
         public String getVariantInfo() { return variantInfo; }
         public double getPrice() { return price; }
         public int getQuantity() { return quantity; }
+        public int getMaxStock() { return maxStock; } // NEW
         public void setQuantity(int quantity) { this.quantity = quantity; }
     }
 
