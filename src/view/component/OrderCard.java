@@ -61,7 +61,6 @@ public class OrderCard extends JPanel {
         btnPanel.add(trackBtn);
         btnPanel.add(billBtn);
 
-        // NEW: Delete/Cancel Button if status is Pending
         if (status.equalsIgnoreCase("Pending")) {
             JButton cancelBtn = new JButton("Cancel Order");
             cancelBtn.setBackground(new Color(220, 50, 50));
@@ -77,8 +76,13 @@ public class OrderCard extends JPanel {
                 if (confirm == JOptionPane.YES_OPTION) {
                     if (orderController.deletePendingOrder(idPesanan)) {
                         JOptionPane.showMessageDialog(parentFrame, "Order has been successfully deleted.");
-                        // This triggers a UI refresh on the parent panel
-                        ((view.dashboard.PurchasedPanel) this.getParent().getParent().getParent()).refreshPurchasedData();
+
+                        view.dashboard.PurchasedPanel parentPanel = (view.dashboard.PurchasedPanel)
+                                SwingUtilities.getAncestorOfClass(view.dashboard.PurchasedPanel.class, OrderCard.this);
+
+                        if (parentPanel != null) {
+                            parentPanel.refreshPurchasedData();
+                        }
                     } else {
                         JOptionPane.showMessageDialog(parentFrame, "Error deleting order.");
                     }

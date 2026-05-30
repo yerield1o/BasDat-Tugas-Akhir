@@ -121,25 +121,58 @@ public class OrderController {
         return items;
     }
 
-    // SPEC 2: FULL DELETE OPERATION
+
     public boolean deletePendingOrder(int orderId) {
-        // We have to delete the children (Produk_Dibeli) before the parent (Pesanan) to respect Foreign Keys!
+        String selectItems = "SELECT id_varian, kuantitas FROM Produk_Dibeli WHERE id_pesanan = ?";
+        String updateStock = "UPDATE Produk_Varian SET stok = stok + ? WHERE id_varian = ?";
+
+        String deleteDelivery = "DELETE FROM Pengiriman WHERE id_pesanan = ?";
+        String deletePayment = "DELETE FROM Pembayaran WHERE id_pesanan = ?";
         String deleteDetails = "DELETE FROM Produk_Dibeli WHERE id_pesanan = ?";
+
         String deleteOrder = "DELETE FROM Pesanan WHERE id_pesanan = ?";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            conn.setAutoCommit(false); // Use transaction for safe deletion
-            try (PreparedStatement pstmt1 = conn.prepareStatement(deleteDetails);
-                 PreparedStatement pstmt2 = conn.prepareStatement(deleteOrder)) {
+            conn.setAutoCommit(false);
 
-                pstmt1.setInt(1, orderId);
-                pstmt1.executeUpdate();
+            try {
+                try (PreparedStatement pstmtSelect = conn.prepareStatement(selectItems);
+                     PreparedStatement pstmtStock = conn.prepareStatement(updateStock)) {
 
-                pstmt2.setInt(1, orderId);
-                pstmt2.executeUpdate();
+                    pstmtSelect.setInt(1, orderId);
+                    ResultSet rs = pstmtSelect.executeQuery();
+
+                    while (rs.next()) {
+                        pstmtStock.setInt(1, rs.getInt("kuantitas"));
+                        pstmtStock.setInt(2, rs.getInt("id_varian"));
+                        pstmtStock.addBatch();
+                    }
+                    pstmtStock.executeBatch();
+                }
+
+                try (PreparedStatement pstmtDel = conn.prepareStatement(deleteDelivery)) {
+                    pstmtDel.setInt(1, orderId);
+                    pstmtDel.executeUpdate();
+                }
+
+                try (PreparedStatement pstmtPay = conn.prepareStatement(deletePayment)) {
+                    pstmtPay.setInt(1, orderId);
+                    pstmtPay.executeUpdate();
+                }
+
+                try (PreparedStatement pstmtDetails = conn.prepareStatement(deleteDetails)) {
+                    pstmtDetails.setInt(1, orderId);
+                    pstmtDetails.executeUpdate();
+                }
+
+                try (PreparedStatement pstmtOrder = conn.prepareStatement(deleteOrder)) {
+                    pstmtOrder.setInt(1, orderId);
+                    pstmtOrder.executeUpdate();
+                }
 
                 conn.commit();
                 return true;
+
             } catch (Exception ex) {
                 conn.rollback();
                 ex.printStackTrace();

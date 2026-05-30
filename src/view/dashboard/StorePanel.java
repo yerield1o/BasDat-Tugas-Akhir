@@ -51,7 +51,6 @@ public class StorePanel extends JPanel {
             if (!keyword.isEmpty()) {
                 loadSearchedProducts(keyword);
             } else {
-                // If they clear the search bar and hit search, reset the store
                 categoryDropdown.setSelectedIndex(0);
                 loadProducts(0);
             }
@@ -88,7 +87,6 @@ public class StorePanel extends JPanel {
         scrollPane.setBorder(null);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Load All Products by default
         loadProducts(0);
     }
 
@@ -97,7 +95,6 @@ public class StorePanel extends JPanel {
         List<Product> products = storeController.getProducts(categoryId);
 
         for (Product p : products) {
-            // Memanggil ProductCard secara utuh
             productGridPanel.add(new ProductCard(p, parentFrame, storeController));
         }
 
@@ -109,11 +106,9 @@ public class StorePanel extends JPanel {
         int categoryId = (selectedCategory != null) ? selectedCategory.getId() : 0;
         loadProducts(categoryId);
     }
-    // Helper method to load search results
     private void loadSearchedProducts(String keyword) {
         productGridPanel.removeAll();
 
-        // Update the headers so the user knows they are searching
         categoryNameLabel.setText("Search Results");
         categoryDescLabel.setText("Showing results for: \"" + keyword + "\"");
 

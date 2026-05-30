@@ -11,12 +11,9 @@ public class Main extends JFrame {
     public Main() {
         setTitle("NIG Clothing - System Gateway");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // Makes it full-screen like the login panels
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
 
-        // ==========================================
-        // THE OCEAN BACKGROUND
-        // ==========================================
         JPanel backgroundPanel = new JPanel(new GridBagLayout()) {
             private final Image backgroundImage = new ImageIcon("pictures/loginbackground.jpg").getImage();
             @Override
@@ -28,11 +25,8 @@ public class Main extends JFrame {
             }
         };
 
-        // ==========================================
-        // THE SEMI-TRANSPARENT CONTAINER
-        // ==========================================
         JPanel containerPanel = new JPanel(new GridBagLayout());
-        containerPanel.setBackground(new Color(0, 0, 0, 210)); // The dark glass effect!
+        containerPanel.setBackground(new Color(0, 0, 0, 210));
         containerPanel.setBorder(BorderFactory.createEmptyBorder(60, 60, 60, 60));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -40,14 +34,12 @@ public class Main extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0;
 
-        // 1. Title
         gbc.gridy = 0;
         JLabel title = new JLabel("SYSTEM GATEWAY", SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 36));
         title.setForeground(Color.WHITE);
         containerPanel.add(title, gbc);
 
-        // 2. Subtitle
         gbc.gridy = 1;
         gbc.insets = new Insets(0, 20, 30, 20);
         JLabel subTitle = new JLabel("Select your access level to continue", SwingConstants.CENTER);
@@ -55,10 +47,8 @@ public class Main extends JFrame {
         subTitle.setForeground(Color.LIGHT_GRAY);
         containerPanel.add(subTitle, gbc);
 
-        // Reset insets for the buttons
         gbc.insets = new Insets(10, 20, 15, 20);
 
-        // 3. Customer Button
         gbc.gridy = 2;
         JButton customerBtn = new JButton("Enter as CUSTOMER");
         customerBtn.setFont(new Font("Arial", Font.BOLD, 20));
@@ -72,7 +62,6 @@ public class Main extends JFrame {
         });
         containerPanel.add(customerBtn, gbc);
 
-        // 4. Admin Button
         gbc.gridy = 3;
         gbc.insets = new Insets(10, 20, 20, 20);
         JButton adminBtn = new JButton("Enter as ADMINISTRATOR");
@@ -87,7 +76,6 @@ public class Main extends JFrame {
         });
         containerPanel.add(adminBtn, gbc);
 
-        // Add the dark container to the center of the ocean background
         backgroundPanel.add(containerPanel);
         add(backgroundPanel);
     }
