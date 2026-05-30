@@ -119,9 +119,20 @@ public class AdminApp extends JFrame {
         // 5. Login Button
         gbc.gridy = 4;
         gbc.insets = new Insets(10, 40, 40, 40); // Thicker bottom padding since sign-up is gone
+        JButton backBtn = new JButton("Back");
+        backBtn.setBackground(new Color(100, 100, 100)); // Sleek gray
+        backBtn.setForeground(Color.WHITE);
+        backBtn.setFocusPainted(false);
+        backBtn.setFont(new Font("Arial", Font.BOLD, 14));
+        backBtn.addActionListener(e -> {
+            new app.Main().setVisible(true); // Open the Gateway
+            this.dispose(); // Close the Admin Login
+        });
+        backBtn.setPreferredSize(new Dimension(100, 50));
+
         JButton loginButton = new JButton("Access Portal");
         loginButton.setFont(new Font("Arial", Font.BOLD, 20));
-        loginButton.setPreferredSize(new Dimension(300, 50));
+        loginButton.setPreferredSize(new Dimension(190, 50));
         loginButton.setBackground(new Color(220, 50, 50)); // Red button to distinguish from customer app
         loginButton.setForeground(Color.WHITE);
         loginButton.setFocusPainted(false);
@@ -146,8 +157,13 @@ public class AdminApp extends JFrame {
                 JOptionPane.showMessageDialog(panel, "Invalid admin credentials.", "Access Denied", JOptionPane.ERROR_MESSAGE);
             }
         });
-        panel.add(loginButton, gbc);
 
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        buttonPanel.setOpaque(false);
+        buttonPanel.add(backBtn);
+        buttonPanel.add(loginButton);
+
+        panel.add(buttonPanel, gbc);
         return panel;
     }
 

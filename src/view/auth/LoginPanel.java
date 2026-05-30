@@ -7,9 +7,11 @@ import view.dashboard.DashboardFrame;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-
+import app.Main;
+import javax.swing.SwingUtilities;
 public class LoginPanel extends JPanel {
     private AuthController authController;
+
 
     public LoginPanel(JFrame parentFrame, CardLayout cardLayout, JPanel parentContainer) {
         this.authController = new AuthController();
@@ -40,10 +42,24 @@ public class LoginPanel extends JPanel {
         setupPasswordPlaceholder(passwordField, "Password");
         add(passwordField, gbc);
 
-        gbc.gridy = 4; gbc.insets = new Insets(10, 40, 15, 40);
+        gbc.gridy = 4;
+        gbc.insets = new Insets(10, 40, 15, 40);
+
+        JButton backBtn = new JButton("Back");
+        backBtn.setBackground(new Color(100, 100, 100));
+        backBtn.setForeground(Color.WHITE);
+        backBtn.setFocusPainted(false);
+        backBtn.setFont(new Font("Arial", Font.BOLD, 16));
+        backBtn.setPreferredSize(new Dimension(100, 50));
+
+        backBtn.addActionListener(e -> {
+            new Main().setVisible(true);
+            SwingUtilities.getWindowAncestor(this).dispose();
+        });
+
         JButton loginButton = new JButton("Log In");
-        loginButton.setFont(new Font("Arial", Font.BOLD, 20));
-        loginButton.setPreferredSize(new Dimension(300, 50));
+        loginButton.setFont(new Font("Arial", Font.BOLD, 16));
+        loginButton.setPreferredSize(new Dimension(185, 50));
         loginButton.setBackground(new Color(50, 150, 250));
         loginButton.setForeground(Color.WHITE);
         loginButton.setFocusPainted(false);
@@ -60,7 +76,6 @@ public class LoginPanel extends JPanel {
             if (authController.authenticateUser(user, pass)) {
                 JOptionPane.showMessageDialog(this, "Welcome back, " + user + "!", "Login Successful", JOptionPane.INFORMATION_MESSAGE);
 
-                // Transisi ke Dashboard
                 DashboardFrame dashboard = new DashboardFrame(user);
                 dashboard.setVisible(true);
                 parentFrame.dispose();
@@ -69,7 +84,13 @@ public class LoginPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
             }
         });
-        add(loginButton, gbc);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        buttonPanel.setOpaque(false);
+        buttonPanel.add(backBtn);
+        buttonPanel.add(loginButton);
+
+        add(buttonPanel, gbc);
 
         gbc.gridy = 5; gbc.insets = new Insets(0, 40, 40, 40);
         JLabel signUpLabel = new JLabel("<html><u>Don't have an account? Sign up!</u></html>", SwingConstants.CENTER);

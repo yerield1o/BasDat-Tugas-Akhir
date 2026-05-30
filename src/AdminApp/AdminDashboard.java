@@ -832,7 +832,8 @@ public class AdminDashboard extends JFrame {
         if (option == JOptionPane.OK_OPTION) {
 
             // NOTICE: id_brand is now a ? instead of a hardcoded 1
-            String insertProduct = "INSERT INTO Produk (nama_produk, harga, id_kategori, id_brand) VALUES (?, ?, ?, ?)";
+            // NEW VERSION: We explicitly tell SQL to use 'default.png' for the gambar_produk column!
+            String insertProduct = "INSERT INTO Produk (nama_produk, harga, id_kategori, id_brand, gambar_produk) VALUES (?, ?, ?, ?, 'default.png')";
             String insertVariant = "INSERT INTO Produk_Varian (id_produk, ukuran, warna, stok) VALUES (?, ?, ?, ?)";
 
             try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass)) {
