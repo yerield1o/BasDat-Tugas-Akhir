@@ -74,4 +74,29 @@ public class StoreController {
         }
         return variants;
     }
+
+    // SPEC 3: TEXT-BASED SEARCH QUERY (Using the LIKE operator)
+    public List<Product> searchProductsByName(String keyword) {
+        List<Product> products = new ArrayList<>();
+        String query = "SELECT id_produk, nama_produk, harga, gambar_produk FROM Produk WHERE nama_produk LIKE ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setString(1, "%" + keyword + "%");
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                products.add(new Product(
+                        rs.getInt("id_produk"),
+                        rs.getString("nama_produk"),
+                        rs.getDouble("harga"),
+                        rs.getString("gambar_produk")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return products;
+    }
 }

@@ -38,6 +38,29 @@ public class StorePanel extends JPanel {
 
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         filterPanel.setOpaque(false);
+        JTextField searchField = new JTextField(15);
+        searchField.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        JButton searchBtn = new JButton("Search");
+        searchBtn.setBackground(new Color(50, 150, 250));
+        searchBtn.setForeground(Color.WHITE);
+        searchBtn.setFocusPainted(false);
+
+        searchBtn.addActionListener(e -> {
+            String keyword = searchField.getText().trim();
+            if (!keyword.isEmpty()) {
+                loadSearchedProducts(keyword);
+            } else {
+                // If they clear the search bar and hit search, reset the store
+                categoryDropdown.setSelectedIndex(0);
+                loadProducts(0);
+            }
+        });
+
+        filterPanel.add(searchField);
+        filterPanel.add(searchBtn);
+        filterPanel.add(Box.createRigidArea(new Dimension(20, 0)));
+
         filterPanel.add(new JLabel("Sort by Category: "));
 
         categoryDropdown = new JComboBox<>();
@@ -85,5 +108,28 @@ public class StorePanel extends JPanel {
         Category selectedCategory = (Category) categoryDropdown.getSelectedItem();
         int categoryId = (selectedCategory != null) ? selectedCategory.getId() : 0;
         loadProducts(categoryId);
+    }
+    // Helper method to load search results
+    private void loadSearchedProducts(String keyword) {
+        productGridPanel.removeAll();
+
+        // Update the headers so the user knows they are searching
+        categoryNameLabel.setText("Search Results");
+        categoryDescLabel.setText("Showing results for: \"" + keyword + "\"");
+
+        List<Product> products = storeController.searchProductsByName(keyword);
+
+        if (products.isEmpty()) {
+            JLabel emptyLabel = new JLabel("No products found matching that name.");
+            emptyLabel.setFont(new Font("Arial", Font.ITALIC, 16));
+            productGridPanel.add(emptyLabel);
+        } else {
+            for (Product p : products) {
+                productGridPanel.add(new ProductCard(p, parentFrame, storeController));
+            }
+        }
+
+        productGridPanel.revalidate();
+        productGridPanel.repaint();
     }
 }

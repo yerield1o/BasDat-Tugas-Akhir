@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Aplikasi NIG Clothing:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Aplikasi_NIG_Clothing_jar</output-path>
+    <root id="archive" name="Aplikasi NIG Clothing.jar">
+      <element id="module-output" name="Aplikasi NIG Clothing" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../sqljdbc_13.4.0.0_enu/sqljdbc_13.4/enu/jars/mssql-jdbc-13.4.0.jre8.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../sqljdbc_13.4.0.0_enu/sqljdbc_13.4/enu/jars/mssql-jdbc-13.4.0.jre11.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../sqljdbc_13.4.0.0_enu.zip" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

@@ -120,4 +120,36 @@ public class OrderController {
         }
         return items;
     }
+
+    // SPEC 2: FULL DELETE OPERATION
+    public boolean deletePendingOrder(int orderId) {
+        // We have to delete the children (Produk_Dibeli) before the parent (Pesanan) to respect Foreign Keys!
+        String deleteDetails = "DELETE FROM Produk_Dibeli WHERE id_pesanan = ?";
+        String deleteOrder = "DELETE FROM Pesanan WHERE id_pesanan = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false); // Use transaction for safe deletion
+            try (PreparedStatement pstmt1 = conn.prepareStatement(deleteDetails);
+                 PreparedStatement pstmt2 = conn.prepareStatement(deleteOrder)) {
+
+                pstmt1.setInt(1, orderId);
+                pstmt1.executeUpdate();
+
+                pstmt2.setInt(1, orderId);
+                pstmt2.executeUpdate();
+
+                conn.commit();
+                return true;
+            } catch (Exception ex) {
+                conn.rollback();
+                ex.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
