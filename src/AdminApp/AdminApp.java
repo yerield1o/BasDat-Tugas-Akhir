@@ -7,7 +7,6 @@ import java.awt.event.FocusEvent;
 
 public class AdminApp extends JFrame {
 
-    // Hardcoded Admin Credentials
     private final String ADMIN_USERNAME = "admin";
     private final String ADMIN_PASSWORD = "11111";
 
@@ -18,9 +17,6 @@ public class AdminApp extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
 
-        // ==========================================
-        // THE OCEAN (Same background as customer)
-        // ==========================================
         JPanel backgroundPanel = new JPanel(new GridBagLayout()) {
             private final Image backgroundImage = new ImageIcon("pictures/loginbackground.jpg").getImage();
             @Override
@@ -32,14 +28,10 @@ public class AdminApp extends JFrame {
             }
         };
 
-        // Add the login panel directly to the center
         backgroundPanel.add(createLoginPanel());
         add(backgroundPanel);
     }
 
-    // ==========================================
-    // THE LOGIN PANEL (No Sign Up Button)
-    // ==========================================
     private JPanel createLoginPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(new Color(0, 0, 0, 210));
@@ -47,7 +39,6 @@ public class AdminApp extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         Font fieldFont = new Font("Arial", Font.PLAIN, 18);
 
-        // 1. Logo
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 1;
@@ -56,15 +47,13 @@ public class AdminApp extends JFrame {
         JLabel logoLabel = new JLabel(scaleImage("pictures/logo.png", 200, true));
         panel.add(logoLabel, gbc);
 
-        // 2. Admin Warning Text
         gbc.gridy = 1;
         gbc.insets = new Insets(0, 40, 15, 40);
         JLabel welcomeText = new JLabel("STAFF LOGIN", SwingConstants.CENTER);
         welcomeText.setFont(new Font("Arial", Font.BOLD, 14));
-        welcomeText.setForeground(Color.WHITE); // Red text for admin vibe
+        welcomeText.setForeground(Color.WHITE);
         panel.add(welcomeText, gbc);
 
-        // 3. Username Field
         gbc.gridy = 2;
         gbc.insets = new Insets(0, 40, 15, 40);
         JTextField usernameField = new JTextField("Username");
@@ -88,7 +77,6 @@ public class AdminApp extends JFrame {
         });
         panel.add(usernameField, gbc);
 
-        // 4. Password Field
         gbc.gridy = 3;
         JPasswordField passwordField = new JPasswordField("Password");
         passwordField.setFont(fieldFont);
@@ -116,24 +104,23 @@ public class AdminApp extends JFrame {
         });
         panel.add(passwordField, gbc);
 
-        // 5. Login Button
         gbc.gridy = 4;
-        gbc.insets = new Insets(10, 40, 40, 40); // Thicker bottom padding since sign-up is gone
+        gbc.insets = new Insets(10, 40, 40, 40);
         JButton backBtn = new JButton("Back");
-        backBtn.setBackground(new Color(100, 100, 100)); // Sleek gray
+        backBtn.setBackground(new Color(100, 100, 100));
         backBtn.setForeground(Color.WHITE);
         backBtn.setFocusPainted(false);
         backBtn.setFont(new Font("Arial", Font.BOLD, 14));
         backBtn.addActionListener(e -> {
-            new app.Main().setVisible(true); // Open the Gateway
-            this.dispose(); // Close the Admin Login
+            new app.Main().setVisible(true);
+            this.dispose();
         });
         backBtn.setPreferredSize(new Dimension(100, 50));
 
         JButton loginButton = new JButton("Access Portal");
         loginButton.setFont(new Font("Arial", Font.BOLD, 20));
         loginButton.setPreferredSize(new Dimension(190, 50));
-        loginButton.setBackground(new Color(220, 50, 50)); // Red button to distinguish from customer app
+        loginButton.setBackground(new Color(220, 50, 50));
         loginButton.setForeground(Color.WHITE);
         loginButton.setFocusPainted(false);
 
@@ -141,14 +128,10 @@ public class AdminApp extends JFrame {
             String user = usernameField.getText();
             String pass = String.valueOf(passwordField.getPassword());
 
-            // ==========================================
-            // HARDCODED ADMIN CHECK
-            // ==========================================
             if (user.equals(ADMIN_USERNAME) && pass.equals(ADMIN_PASSWORD)) {
 
                 JOptionPane.showMessageDialog(panel, "Access Granted. Welcome, Admin.", "Login Successful", JOptionPane.INFORMATION_MESSAGE);
 
-                // This will throw an error until we build AdminDashboard.java in the next step!
                 AdminDashboard dashboard = new AdminDashboard();
                 dashboard.setVisible(true);
                 AdminApp.this.dispose();
@@ -167,7 +150,6 @@ public class AdminApp extends JFrame {
         return panel;
     }
 
-    // Helper method to load and resize images (Identical to CustomerApp)
     private ImageIcon scaleImage(String imagePath, int targetSize, boolean lockWidth) {
         ImageIcon originalIcon = new ImageIcon(imagePath);
         Image originalImage = originalIcon.getImage();

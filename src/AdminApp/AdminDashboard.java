@@ -28,18 +28,14 @@ public class AdminDashboard extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLayout(new BorderLayout());
 
-        // Add Navigation Bar
         add(createAdminNavBar(), BorderLayout.NORTH);
 
-        // Add Pages to CardLayout
         mainContentPanel.add(createOrdersPage(), "ORDERS");
-        // We will build these other tabs later!
         mainContentPanel.add(createProductsPage(), "PRODUCTS");
         mainContentPanel.add(createAnalyticsPage(), "ANALYTICS");
 
         add(mainContentPanel, BorderLayout.CENTER);
 
-        // Show Orders by default and load the data
         cardLayout.show(mainContentPanel, "ORDERS");
         refreshOrdersData();
     }
@@ -49,16 +45,14 @@ public class AdminDashboard extends JFrame {
         String[] cardNames = {"ORDERS", "PRODUCTS", "ANALYTICS"};
 
         JPanel navBar = new JPanel(new BorderLayout());
-        navBar.setBackground(new Color(20, 20, 20)); // Even darker theme for Admin
+        navBar.setBackground(new Color(20, 20, 20));
         navBar.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        // Admin Logo Area
         JLabel logoLabel = new JLabel("  NIG Clothing | ADMIN");
         logoLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        logoLabel.setForeground(new Color(220, 50, 50)); // Red text for admin warning
+        logoLabel.setForeground(new Color(220, 50, 50));
         navBar.add(logoLabel, BorderLayout.WEST);
 
-        // Tabs
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         buttonPanel.setOpaque(false);
 
@@ -80,7 +74,6 @@ public class AdminDashboard extends JFrame {
             buttonPanel.add(tabButton);
         }
 
-        // Logout Button
         JButton logoutBtn = new JButton("Logout");
         logoutBtn.setBackground(new Color(220, 50, 50));
         logoutBtn.setForeground(Color.WHITE);
@@ -103,9 +96,6 @@ public class AdminDashboard extends JFrame {
         return panel;
     }
 
-    // ==========================================
-    // THE ORDERS PAGE
-    // ==========================================
     private JPanel createOrdersPage() {
         JPanel page = new JPanel(new BorderLayout());
         page.setBackground(new Color(245, 245, 245));
@@ -134,7 +124,6 @@ public class AdminDashboard extends JFrame {
     private void refreshOrdersData() {
         ordersContainerPanel.removeAll();
 
-        // Join Pesanan with Pelanggan to get the actual name of the buyer!
         String query = "SELECT p.id_pesanan, c.nama_pelanggan, p.status_pesanan, p.tanggal_pesanan " +
                 "FROM Pesanan p " +
                 "JOIN Pelanggan c ON p.id_pelanggan = c.id_pelanggan " +
@@ -171,13 +160,11 @@ public class AdminDashboard extends JFrame {
         ));
         card.setMaximumSize(new Dimension(1000, 100));
 
-        // Left: Order Info
         JPanel infoPanel = new JPanel(new GridLayout(2, 1, 0, 5));
         infoPanel.setOpaque(false);
         JLabel idLabel = new JLabel("Order #" + orderId + " - " + customerName);
         idLabel.setFont(new Font("Arial", Font.BOLD, 18));
 
-        // Color code the status!
         JLabel statusLabel = new JLabel("Status: " + status + "  |  Date: " + (date != null ? date.substring(0, 10) : "N/A"));
         if (status.equals("Pending")) statusLabel.setForeground(Color.RED);
         else if (status.equals("Selesai")) statusLabel.setForeground(new Color(0, 150, 0));
@@ -187,7 +174,6 @@ public class AdminDashboard extends JFrame {
         infoPanel.add(statusLabel);
         card.add(infoPanel, BorderLayout.CENTER);
 
-        // Right: The Two Management Buttons
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         btnPanel.setOpaque(false);
 
@@ -210,9 +196,6 @@ public class AdminDashboard extends JFrame {
         return card;
     }
 
-    // ==========================================
-    // POP-UP 1: VIEW PURCHASED ITEMS
-    // ==========================================
     private void showOrderItemsPopUp(int orderId) {
         JDialog dialog = new JDialog(this, "Items for Order #" + orderId, true);
         dialog.setSize(400, 400);
@@ -223,7 +206,6 @@ public class AdminDashboard extends JFrame {
         itemsArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
         itemsArea.setMargin(new Insets(10, 10, 10, 10));
 
-        // Use the exact same JOIN from your customer receipt!
         String query = "SELECT p.nama_produk, pv.ukuran, pv.warna, pd.kuantitas " +
                 "FROM Produk_Dibeli pd " +
                 "JOIN Produk_Varian pv ON pd.id_varian = pv.id_varian " +
@@ -254,9 +236,6 @@ public class AdminDashboard extends JFrame {
         dialog.setVisible(true);
     }
 
-    // ==========================================
-    // POP-UP 2: MANAGE ORDER & DELIVERY
-    // ==========================================
     private void showManageOrderPopUp(int orderId, String currentStatus) {
         JDialog dialog = new JDialog(this, "Manage Order #" + orderId, true);
         dialog.setSize(400, 350);
@@ -268,14 +247,12 @@ public class AdminDashboard extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        // 1. Status Dropdown
         gbc.gridy = 0; dialog.add(new JLabel("Update Order Status:"), gbc);
         gbc.gridy = 1;
         JComboBox<String> statusDropdown = new JComboBox<>(new String[]{"Pending", "Diproses", "Dibatalkan", "Selesai"});
         statusDropdown.setSelectedItem(currentStatus);
         dialog.add(statusDropdown, gbc);
 
-        // 2. Delivery Tracking Fields
         gbc.gridy = 2; dialog.add(new JLabel("Tracking Number (Resi):"), gbc);
         gbc.gridy = 3;
         JTextField resiField = new JTextField();
@@ -283,10 +260,9 @@ public class AdminDashboard extends JFrame {
 
         gbc.gridy = 4; dialog.add(new JLabel("Delivery Fee (Biaya):"), gbc);
         gbc.gridy = 5;
-        JTextField feeField = new JTextField("0"); // Defaults to 0 as you requested
+        JTextField feeField = new JTextField("0");
         dialog.add(feeField, gbc);
 
-        // 3. Save Button
         gbc.gridy = 6;
         JButton saveBtn = new JButton("Save Updates");
         saveBtn.setBackground(new Color(50, 200, 100));
@@ -298,24 +274,21 @@ public class AdminDashboard extends JFrame {
             double fee = 0;
             try { fee = Double.parseDouble(feeField.getText()); } catch (Exception ex) {}
 
-            // SPEC 4: Using a CallableStatement to trigger our custom Stored Procedure
             String callProcedure = "{call sp_ProcessDelivery(?, ?, ?, ?)}";
 
             try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
                  CallableStatement cstmt = conn.prepareCall(callProcedure)) {
 
-                // Pass the inputs directly into the SQL Stored Procedure
                 cstmt.setInt(1, orderId);
                 cstmt.setString(2, newStatus);
                 cstmt.setString(3, resi);
                 cstmt.setDouble(4, fee);
 
-                // Execute the procedure
                 cstmt.execute();
 
                 JOptionPane.showMessageDialog(dialog, "Delivery Status Updated Successfully!");
                 dialog.dispose();
-                refreshOrdersData(); // Instantly re-draws the list with the new colors!
+                refreshOrdersData();
 
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -327,14 +300,10 @@ public class AdminDashboard extends JFrame {
         dialog.setVisible(true);
     }
 
-    // ==========================================
-    // THE PRODUCTS PAGE
-    // ==========================================
     private JPanel createProductsPage() {
         JPanel page = new JPanel(new BorderLayout());
         page.setBackground(new Color(245, 245, 245));
 
-        // Top Header & Category Filter
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
@@ -351,14 +320,12 @@ public class AdminDashboard extends JFrame {
         addProductBtn.setFocusPainted(false);
         addProductBtn.addActionListener(e -> showAddProductPopUp());
         filterPanel.add(addProductBtn);
-        // Add some spacing
         filterPanel.add(Box.createRigidArea(new Dimension(20, 0)));
         filterPanel.add(new JLabel("Filter by Category: "));
 
         adminCategoryDropdown = new JComboBox<>();
         adminCategoryDropdown.addItem(new Category(0, "All Categories"));
 
-        // Load categories from DB
         try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT id_kategori, nama_kategori FROM Kategori")) {
@@ -369,7 +336,6 @@ public class AdminDashboard extends JFrame {
             e.printStackTrace();
         }
 
-        // Add action listener to refresh products when a category is picked
         adminCategoryDropdown.addActionListener(e -> {
             Category selected = (Category) adminCategoryDropdown.getSelectedItem();
             if (selected != null) {
@@ -381,7 +347,6 @@ public class AdminDashboard extends JFrame {
         headerPanel.add(filterPanel, BorderLayout.EAST);
         page.add(headerPanel, BorderLayout.NORTH);
 
-        // Products Container
         productsContainerPanel = new JPanel();
         productsContainerPanel.setLayout(new BoxLayout(productsContainerPanel, BoxLayout.Y_AXIS));
         productsContainerPanel.setBackground(new Color(245, 245, 245));
@@ -392,15 +357,11 @@ public class AdminDashboard extends JFrame {
         scrollPane.setBorder(null);
         page.add(scrollPane, BorderLayout.CENTER);
 
-        // Initial Load (Category 0 = All)
         loadAdminProducts(0);
 
         return page;
     }
 
-    // ==========================================
-    // LOAD PRODUCTS FROM DB
-    // ==========================================
     private void loadAdminProducts(int categoryId) {
         productsContainerPanel.removeAll();
 
@@ -418,7 +379,6 @@ public class AdminDashboard extends JFrame {
                 int id = rs.getInt("id_produk");
                 String name = rs.getString("nama_produk");
 
-                // Create a simple card for each product
                 JPanel card = new JPanel(new BorderLayout());
                 card.setBackground(Color.WHITE);
                 card.setMaximumSize(new Dimension(800, 60));
@@ -473,9 +433,6 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-    // ==========================================
-    // VARIANT STOCK MANAGEMENT POP-UP
-    // ==========================================
     private void showProductStockPopUp(int productId, String productName) {
         JDialog dialog = new JDialog(this, "Manage Stock - " + productName, true);
         dialog.setSize(400, 250);
@@ -486,8 +443,6 @@ public class AdminDashboard extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-
-        // 1. Variant Dropdown
         gbc.gridy = 0; dialog.add(new JLabel("Select Variant (Size | Color):"), gbc);
         gbc.gridy = 1;
         JComboBox<AdminVariant> variantDropdown = new JComboBox<>();
@@ -507,19 +462,16 @@ public class AdminDashboard extends JFrame {
 
         if (!hasVariants) {
             JOptionPane.showMessageDialog(this, "This product has no variants in the database yet!");
-            return; // Abort pop-up if empty
+            return;
         }
         dialog.add(variantDropdown, gbc);
 
-        // 2. New Stock Input
         gbc.gridy = 2; dialog.add(new JLabel("Set New Stock Amount:"), gbc);
         gbc.gridy = 3;
 
-        // Use a JSpinner to prevent them from typing letters!
         JSpinner stockSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 9999, 1));
         dialog.add(stockSpinner, gbc);
 
-        // Smart UI: When they change the dropdown, update the spinner to match that variant's current stock!
         variantDropdown.addActionListener(e -> {
             AdminVariant selected = (AdminVariant) variantDropdown.getSelectedItem();
             if (selected != null) {
@@ -527,10 +479,8 @@ public class AdminDashboard extends JFrame {
             }
         });
 
-        // Trigger it once manually to set the initial value
         stockSpinner.setValue(((AdminVariant) variantDropdown.getSelectedItem()).getStock());
 
-        // 3. Save Button
         gbc.gridy = 4;
         JButton saveBtn = new JButton("Update Stock");
         saveBtn.setBackground(new Color(50, 200, 100));
@@ -549,7 +499,7 @@ public class AdminDashboard extends JFrame {
                     pstmt.executeUpdate();
 
                     JOptionPane.showMessageDialog(dialog, "Stock updated successfully!");
-                    dialog.dispose(); // Close pop-up
+                    dialog.dispose();
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -562,15 +512,11 @@ public class AdminDashboard extends JFrame {
         dialog.setVisible(true);
     }
 
-    // ==========================================
-    // THE ANALYTICS PAGE
-    // ==========================================
     private JPanel createAnalyticsPage() {
         JPanel page = new JPanel(new BorderLayout(20, 20));
         page.setBackground(new Color(245, 245, 245));
         page.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Header
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setOpaque(false);
         JLabel title = new JLabel("Store Analytics & Insights");
@@ -578,17 +524,14 @@ public class AdminDashboard extends JFrame {
         headerPanel.add(title);
         page.add(headerPanel, BorderLayout.NORTH);
 
-        // Grid to hold the two tables side-by-side
         JPanel tableContainer = new JPanel(new GridLayout(1, 3, 20, 0));
         tableContainer.setOpaque(false);
 
-        // --- Table 1: Top Selling Products (NOW WITH TIME FILTER!) ---
         JPanel topProductsPanel = new JPanel(new BorderLayout());
         topProductsPanel.setBackground(Color.WHITE);
         topProductsPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(Color.GRAY), "Highest Selling Products"));
 
-        // NEW: The Dropdown UI
         JPanel topProductsHeader = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         topProductsHeader.setOpaque(false);
         topProductsHeader.add(new JLabel("Filter Time: "));
@@ -597,7 +540,6 @@ public class AdminDashboard extends JFrame {
         JComboBox<String> timeFilterDropdown = new JComboBox<>(timeOptions);
         topProductsHeader.add(timeFilterDropdown);
 
-        // This line is what actually glues the dropdown to the screen!
         topProductsPanel.add(topProductsHeader, BorderLayout.NORTH);
 
         String[] col1 = {"Product Name", "Total Units Sold"};
@@ -606,12 +548,10 @@ public class AdminDashboard extends JFrame {
         topProductsTable.setRowHeight(25);
         topProductsPanel.add(new JScrollPane(topProductsTable), BorderLayout.CENTER);
 
-        // Action Listener to refresh ONLY this table when the dropdown changes
         timeFilterDropdown.addActionListener(e -> {
             refreshTopProductsData((String) timeFilterDropdown.getSelectedItem());
         });
 
-        // --- Table 2: Frequently Bought Together ---
         JPanel pairedPanel = new JPanel(new BorderLayout());
         pairedPanel.setBackground(Color.WHITE);
         pairedPanel.setBorder(BorderFactory.createTitledBorder(
@@ -627,8 +567,6 @@ public class AdminDashboard extends JFrame {
         tableContainer.add(pairedPanel);
         page.add(tableContainer, BorderLayout.CENTER);
 
-        // Note: Acknowledging the "Brand" analytics feature!
-        // We have left space at the bottom to add the Brand filters once you alter your database.
         JPanel brandPanel = new JPanel(new BorderLayout());
         brandPanel.setBackground(Color.WHITE);
         brandPanel.setBorder(BorderFactory.createTitledBorder(
@@ -640,7 +578,6 @@ public class AdminDashboard extends JFrame {
         brandTable.setRowHeight(25);
         brandPanel.add(new JScrollPane(brandTable), BorderLayout.CENTER);
 
-        // Make sure all THREE are added to the container!
         tableContainer.add(topProductsPanel);
         tableContainer.add(pairedPanel);
         tableContainer.add(brandPanel);
@@ -648,9 +585,6 @@ public class AdminDashboard extends JFrame {
         return page;
     }
 
-    // ==========================================
-    // THE ANALYTICS SQL LOGIC
-    // ==========================================
     private void refreshAnalyticsData() {
         pairedItemsModel.setRowCount(0);
         brandModel.setRowCount(0);
@@ -659,14 +593,11 @@ public class AdminDashboard extends JFrame {
 
         try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass)) {
 
-            // 1. QUERY: Top Selling Products (Overall)
-            // --- Table 1: Top Selling Products (NOW WITH TIME FILTER!) ---
             JPanel topProductsPanel = new JPanel(new BorderLayout());
             topProductsPanel.setBackground(Color.WHITE);
             topProductsPanel.setBorder(BorderFactory.createTitledBorder(
                     BorderFactory.createLineBorder(Color.GRAY), "Highest Selling Products"));
 
-            // NEW: The Dropdown UI
             JPanel topProductsHeader = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             topProductsHeader.setOpaque(false);
             topProductsHeader.add(new JLabel("Filter Time: "));
@@ -674,7 +605,7 @@ public class AdminDashboard extends JFrame {
             String[] timeOptions = {"All Time", "Last 24 Hours", "Last 7 Days", "Last 30 Days"};
             JComboBox<String> timeFilterDropdown = new JComboBox<>(timeOptions);
             topProductsHeader.add(timeFilterDropdown);
-            topProductsPanel.add(topProductsHeader, BorderLayout.NORTH); // Put it at the top!
+            topProductsPanel.add(topProductsHeader, BorderLayout.NORTH);
 
             String[] col1 = {"Product Name", "Total Units Sold"};
             topProductsModel = new javax.swing.table.DefaultTableModel(col1, 0);
@@ -682,14 +613,10 @@ public class AdminDashboard extends JFrame {
             topProductsTable.setRowHeight(25);
             topProductsPanel.add(new JScrollPane(topProductsTable), BorderLayout.CENTER);
 
-            // NEW: Action Listener to refresh ONLY this table when the dropdown changes
             timeFilterDropdown.addActionListener(e -> {
                 refreshTopProductsData((String) timeFilterDropdown.getSelectedItem());
             });
 
-            // 2. QUERY: Frequently Bought Together (Self-Join Magic)
-            // We join the table to itself using the Order ID, ensuring Item A's ID < Item B's ID
-            // so we don't get duplicates like (Shirt, Hat) and (Hat, Shirt).
             String pairQuery =
                     "SELECT TOP 10 p1.nama_produk AS item1, p2.nama_produk AS item2, COUNT(*) AS times_paired " +
                             "FROM Produk_Dibeli pd1 " +
@@ -710,8 +637,7 @@ public class AdminDashboard extends JFrame {
                             rs2.getInt("times_paired") + " orders"
                     });
                 }
-                // 3. QUERY: Highest Selling Product Per Brand
-                // We use a CTE (WITH clause) to rank products within their brand by sales
+
                 String brandQuery =
                         "WITH BrandSales AS (" +
                                 "    SELECT b.nama_brand, p.nama_produk, SUM(pd.kuantitas) as total_sold, " +
@@ -745,10 +671,9 @@ public class AdminDashboard extends JFrame {
     }
 
     private void refreshTopProductsData(String timeFilter) {
-        topProductsModel.setRowCount(0); // Clear the table instantly
-        String dateCondition = ""; // Default to "All Time" (No WHERE clause)
+        topProductsModel.setRowCount(0);
+        String dateCondition = "";
 
-        // Inject the SQL Server time filters based on the dropdown choice
         if (timeFilter.equals("Last 24 Hours")) {
             dateCondition = "WHERE pes.tanggal_pesanan >= DATEADD(day, -1, GETDATE()) ";
         } else if (timeFilter.equals("Last 7 Days")) {
@@ -757,14 +682,13 @@ public class AdminDashboard extends JFrame {
             dateCondition = "WHERE pes.tanggal_pesanan >= DATEADD(day, -30, GETDATE()) ";
         }
 
-        // We added a JOIN to the Pesanan table so we can check the 'tanggal_pesanan'
         String query =
                 "SELECT TOP 10 p.nama_produk, SUM(pd.kuantitas) AS total_sold " +
                         "FROM Produk_Dibeli pd " +
                         "JOIN Pesanan pes ON pd.id_pesanan = pes.id_pesanan " +
                         "JOIN Produk_Varian pv ON pd.id_varian = pv.id_varian " +
                         "JOIN Produk p ON pv.id_produk = p.id_produk " +
-                        dateCondition + // This dynamically inserts the WHERE clause if needed!
+                        dateCondition +
                         "GROUP BY p.nama_produk " +
                         "ORDER BY total_sold DESC";
 
@@ -783,7 +707,6 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-    // Helper method to fetch Brands from the database dynamically
     private JComboBox<model.Brand> createBrandDropdown() {
         JComboBox<model.Brand> dropdown = new JComboBox<>();
         try (Connection conn = DriverManager.getConnection(dbURL, dbUser, dbPass);
@@ -798,7 +721,6 @@ public class AdminDashboard extends JFrame {
         return dropdown;
     }
 
-    // UPDATED: Create Product (Now includes Brand!)
     private void showAddProductPopUp() {
         JTextField nameField = new JTextField();
         JTextField priceField = new JTextField();
@@ -808,7 +730,6 @@ public class AdminDashboard extends JFrame {
             catDropdown.addItem(adminCategoryDropdown.getItemAt(i));
         }
 
-        // NEW: Brand Dropdown!
         JComboBox<model.Brand> brandDropdown = createBrandDropdown();
 
         JTextField sizeField = new JTextField("L");
@@ -820,7 +741,7 @@ public class AdminDashboard extends JFrame {
                 "Product Name:", nameField,
                 "Price (Rp):", priceField,
                 "Category:", catDropdown,
-                "Brand:", brandDropdown, // Added to the UI!
+                "Brand:", brandDropdown,
                 "", "",
                 "--- FIRST VARIANT INFO ---", "",
                 "Size (e.g., S, M, L, XL):", sizeField,
@@ -831,8 +752,6 @@ public class AdminDashboard extends JFrame {
         int option = JOptionPane.showConfirmDialog(this, message, "Create New Product", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
 
-            // NOTICE: id_brand is now a ? instead of a hardcoded 1
-            // NEW VERSION: We explicitly tell SQL to use 'default.png' for the gambar_produk column!
             String insertProduct = "INSERT INTO Produk (nama_produk, harga, id_kategori, id_brand, gambar_produk) VALUES (?, ?, ?, ?, 'default.png')";
             String insertVariant = "INSERT INTO Produk_Varian (id_produk, ukuran, warna, stok) VALUES (?, ?, ?, ?)";
 
@@ -843,7 +762,6 @@ public class AdminDashboard extends JFrame {
                     pstmtProd.setString(1, nameField.getText());
                     pstmtProd.setDouble(2, Double.parseDouble(priceField.getText()));
                     pstmtProd.setInt(3, ((Category) catDropdown.getSelectedItem()).getId());
-                    // Set the brand ID based on what the Admin selected!
                     pstmtProd.setInt(4, ((model.Brand) brandDropdown.getSelectedItem()).getId());
                     pstmtProd.executeUpdate();
 
@@ -874,7 +792,6 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-    // NEW METHOD: Update an existing product's brand!
     private void showChangeBrandPopUp(int productId, String productName) {
         JComboBox<model.Brand> brandDropdown = createBrandDropdown();
 
@@ -900,7 +817,6 @@ public class AdminDashboard extends JFrame {
                     pstmt.executeUpdate();
 
                     JOptionPane.showMessageDialog(this, "Brand successfully updated to " + selectedBrand.getName() + "!");
-                    // Refresh the store so the customer sees the change instantly
                     loadAdminProducts(0);
 
                 } catch (Exception e) {
@@ -918,17 +834,13 @@ public class AdminDashboard extends JFrame {
             pstmt.setInt(1, productId);
             pstmt.executeUpdate();
             JOptionPane.showMessageDialog(this, "Product deleted successfully!");
-            loadAdminProducts(0); // Refresh the list
-
+            loadAdminProducts(0);
         } catch (SQLException e) {
-            // THIS CATCHES THE TRIGGER WE MADE EARLIER!
             JOptionPane.showMessageDialog(this, "Cannot delete product! It has already been purchased by customers.", "Delete Blocked", JOptionPane.WARNING_MESSAGE);
         }
     }
 
-    // ==========================================
-    // HELPER CLASSES
-    // ==========================================
+
     class Category {
         private int id;
         private String name;
